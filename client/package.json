@@ -1,0 +1,48 @@
+{
+  "name": "client",
+  "version": "1.0.0",
+  "private": true,
+  "scripts": {
+    "dev": "next dev -p 8080",
+    "build": "next build",
+    "start": "next start -p 8080"
+  },
+  "dependencies": {
+    "@chakra-ui/anatomy": "2.3.4",
+    "@chakra-ui/icons": "2.2.4",
+    "@chakra-ui/next-js": "^2.4.1",
+    "@chakra-ui/react": "2.10.1",
+    "@chakra-ui/system": "2.6.2",
+    "@chakra-ui/theme-tools": "2.2.5",
+    "@chakra-ui/toast": "7.0.2",
+    "@chakra-ui/utils": "2.0.15",
+    "@choc-ui/chakra-autocomplete": "5.6.4",
+    "@emotion/react": "11.13.3",
+    "@emotion/styled": "11.13.0",
+    "@ethersproject/logger": "5.7.0",
+    "@metamask/detect-provider": "2.0.0",
+    "@openzeppelin/contracts": "5.0.2",
+    "@reduxjs/toolkit": "2.2.7",
+    "csv": "6.3.10",
+    "dotenv": "16.4.5",
+    "encoding": "^0.1.13",
+    "ethers": "5.7.2",
+    "framer-motion": "11.11.1",
+    "moment": "2.30.1",
+    "mongoose": "8.7.0",
+    "next": "14.2.14",
+    "pino-pretty": "^11.2.2",
+    "react": "18.3.1",
+    "react-dom": "18.3.1",
+    "react-dropzone": "14.2.9",
+    "react-icons": "5.3.0",
+    "react-redux": "9.1.2"
+  },
+  "devDependencies": {
+    "@types/node": "22.7.4",
+    "@types/react": "18.3.11",
+    "@types/react-dom": "18.3.0",
+    "ts-loader": "9.5.1",
+    "typescript": "^5.6.2"
+  }
+}

@@ -1,0 +1,3 @@
+forge-std/=node_modules/forge-std/src
+halmos-cheatcodes=node_modules/halmos-cheatcodes
+@openzeppelin=node_modules/@openzeppelin
