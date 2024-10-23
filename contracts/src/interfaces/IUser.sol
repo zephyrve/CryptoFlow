@@ -3,7 +3,7 @@ pragma solidity ^0.8.20;
 
 import "../libs/Structs.sol";
 
-interface IUSer {
+interface IUser {
     event Receive(address indexed _sender, uint256 _amount);
     event Deposit(address indexed _sender, address indexed _tokenAddress, uint256 _amount);
     event CreateRecurringPayment(address indexed _sender);
@@ -21,9 +21,9 @@ interface IUSer {
 
     function withdrawFromPaymentRequest(uint256 _requestId, uint256 _amount) external;
 
-    function cancelPaymentRequest(uint256 _requestId) external;
+    function cancelPaymentRequest(uint256 _requestId, bool sendToEmitter) external;
 
-    function transferPaymentRequest(uint256 _requestId, address _to) external;
+    function transferPaymentRequest(uint256 _requestId, address _to, bool sendToOldRecipient) external;
 
     function getUserTokensBalance() external view returns (Structs.Balance[] memory);
 

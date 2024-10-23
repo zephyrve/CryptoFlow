@@ -6,11 +6,15 @@ export async function POST(req: Request) {
     await connect();
 
     const body = await req.json();
-    const {recipient, tokenAddress, items} = body;
+    const {owner, settings, items} = body;
 
-    if (recipient && tokenAddress && Array.isArray(items) && items.length > 0) {
+    if (owner && settings && Array.isArray(items) && items.length > 0) {
         try {
-            const invoice = new Invoice(body);
+            const invoice = new Invoice({
+                ...settings,
+                items,
+                owner
+            });
 
             const savedInvoice = await invoice.save();
 

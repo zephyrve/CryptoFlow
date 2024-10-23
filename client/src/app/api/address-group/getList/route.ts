@@ -10,7 +10,7 @@ export async function POST(req: Request) {
 
     if (owner) {
         try {
-            const groups = await AddressGroup.find({owner: owner});
+            const groups = await AddressGroup.find({ owner: { $regex: new RegExp(owner, 'i') } });
             return NextResponse.json(groups, {status: 200});
         } catch (error: unknown) {
             console.error(error);

@@ -3,17 +3,17 @@ pragma solidity ^0.8.20;
 
 library Structs {
     struct PaymentRequest {
-        uint requestId;
+        uint256 requestId;
         address sender;
         address tokenAddress;
         bool isNativeToken;
-        uint startDate;
-        uint paymentAmount;
-        uint remainingBalance;
+        uint256 startDate;
+        uint256 paymentAmount;
+        uint256 remainingBalance;
         uint8 prepaidPercentage;
-        uint unlockAmountPerTime;
-        uint unlockEvery;
-        uint numberOfUnlocks;
+        uint256 unlockAmountPerTime;
+        uint256 unlockEvery;
+        uint256 numberOfUnlocks;
         address recipient;
         uint8 whoCanCancel;
         uint8 whoCanTransfer;
@@ -22,16 +22,16 @@ library Structs {
 
     struct RecurringRecipient {
         address recipient;
-        uint unlockEvery;
-        uint unlockAmountPerTime;
-        uint numberOfUnlocks;
+        uint256 unlockEvery;
+        uint256 unlockAmountPerTime;
+        uint256 numberOfUnlocks;
         uint8 prepaidPercentage;
     }
 
     struct RecurringSetting {
         address tokenAddress;
         bool isNativeToken;
-        uint startDate;
+        uint256 startDate;
         uint8 whoCanCancel;
         uint8 whoCanTransfer;
     }
@@ -39,18 +39,18 @@ library Structs {
     struct OneTimeSetting {
         address tokenAddress;
         bool isNativeToken;
-        uint startDate;
+        uint256 startDate;
         bool isPayNow;
     }
 
     struct OneTimeRecipient {
         address recipient;
-        uint amount;
+        uint256 amount;
     }
 
     struct Balance {
         address tokenAddress;
-        uint balance;
-        uint lockedAmount;
+        uint256 balance;
+        uint256 lockedAmount;
     }
 }

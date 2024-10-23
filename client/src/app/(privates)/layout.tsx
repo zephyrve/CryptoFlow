@@ -1,105 +1,82 @@
 'use client'
-import {Alert, AlertDescription, AlertIcon, AlertTitle, Box, Button, Container, Flex, Spinner} from "@chakra-ui/react";
-import SidebarWithHeader from "@/components/layout/SideBar";
-import {useMetaMask} from "@/utils/walletConnection/useMetamask";
-import Link from "next/link";
-import React, {useEffect} from "react";
-import {getWriteContract} from "@/utils/contract/contractInteractions";
-import {useAppDispatch, useAppSelector} from "@/stores/hooks";
-import {setContract} from "@/stores/network/networkSlice";
-import {DEFAULT_CHAIN} from "@/config/constants";
+import Link from "next/link"
+import {Button} from "@/components/ui/button"
+import React, {ReactNode, useCallback, useEffect} from "react";
+import {usePathname} from "next/navigation";
+import {useWalletStore} from "@/stores/useWalletStore";
+import {useAccount, useConnect} from "wagmi";
+import {useAddressesStore} from "@/stores/useAddressesStore";
+import {useGroupsStore} from "@/stores/useGroupsStore";
+import useMetaMaskInstalled from "@/hooks/useMetaMaskInstalled";
+import WalletButton from "@/components/share/WalletButton";
+import Sidebar from "@/components/share/Sidebar";
+import MobileMenu from "@/components/share/MobileMenu";
+import useUserStatisticsStore from "@/stores/userStatisticsStore";
 
-type RootLayoutProps = { children: React.ReactNode }
 
-const RootLayout = ({children}: Readonly<RootLayoutProps>) => {
-    const {account, chainId, status, connect, switchChain} = useMetaMask()
-    const dispatch = useAppDispatch();
-    const {contract} = useAppSelector((state) => state.network);
-
-    const connectWallet = async () => {
-        await connect()
-        await switchChain(DEFAULT_CHAIN)
-    };
+export function Dashboard({children}: { children: ReactNode }) {
+    const pathname = usePathname()
+    const {getAddresses} = useAddressesStore()
+    const {getGroups} = useGroupsStore()
+    const {getBalances} = useWalletStore()
+    const {status, address} = useAccount()
+    const {isMetaMaskInstalled, isLoading} = useMetaMaskInstalled()
+    const {connectors, connect} = useConnect()
+    const {fetchUserStatistics} = useUserStatisticsStore()
 
     useEffect(() => {
-        if (contract === null)
-            dispatch(setContract(getWriteContract()))
-    }, [account, contract])
+        if (address) {
+            getGroups({address})
+            getAddresses({address})
+            getBalances({address})
+            fetchUserStatistics({address})
+        }
+    }, [address]);
+
+    const handleConnect = useCallback(async () => {
+        connect({connector: connectors[0]});
+    }, [])
 
     return (
-        <Box>
-            <Container maxW={"container.3xl"} p={0}>
-                <SidebarWithHeader>
-                    <Flex justifyContent={'center'} alignItems={'center'}>
-                        {status === 'initializing' &&
-                            <Flex w={'100%'} justifyContent={'center'} alignItems={'center'}>
-                                <Spinner/>
-                            </Flex>
-                        }
-                        {status === 'connected' && chainId !== DEFAULT_CHAIN &&
-                            <Alert mb={5} justifyContent={'space-between'} borderRadius={10} status='error'>
-                                <AlertIcon/>
-                                <AlertTitle>Switch network to BTT Testnet</AlertTitle>
-                                <AlertDescription ml={'auto'}>
+        <div
+            className="private-layout grid gap-2 min-h-screen w-full md:grid-cols-[240px_1fr] lg:grid-cols-[240px_1fr] p-4">
+            <Sidebar/>
+            <div className="flex flex-col lg:px-6">
+                <header
+                    className="rounded-xl flex h-14 items-center gap-1 bg-secondary-foreground dark:bg-transparent/70 dark:border-white/30 dark:border-[1px] px-3 lg:h-[60px] lg:px-4"
+                >
+                    <MobileMenu/>
+                    <WalletButton/>
+                </header>
+                <main className="flex flex-1 flex-col gap-4 p-0 pt-4 lg:gap-6 lg:py-6">
+                    {status === 'connected'
+                        ? children
+                        : <div className={'h-full w-full flex justify-center items-center'}>
+                            {isMetaMaskInstalled ? (
                                     <Button
-                                        onClick={() => switchChain(DEFAULT_CHAIN)}
-                                        display={{base: "inline-flex", md: "inline-flex"}}
-                                        colorScheme="red"
-                                        gap={2}
+                                        size={'lg'}
+                                        variant={'destructive'}
+                                        isLoading={status === 'connecting' || status === 'reconnecting' || isLoading}
+                                        disabled={status === 'connecting' || status === 'reconnecting' || isLoading}
+                                        onClick={handleConnect}
                                     >
-                                        Switch to BTT Testnet
-                                    </Button>
-                                </AlertDescription>
-                            </Alert>
-                        }
+                                        Connect Wallet
+                                    </Button>)
+                                : !isMetaMaskInstalled && (
+                                <Button
+                                    asChild
+                                    variant={'destructive'}
+                                >
+                                    <Link target={'_blank'} href={'https://metamask.io/download.html'}>
+                                        Install MetaMask
+                                    </Link>
+                                </Button>
+                            )}
+                        </div>}
+                </main>
+            </div>
+        </div>
+    )
+}
 
-                        {(status === 'notConnected' || status === 'connecting') &&
-                            <Alert mb={5} justifyContent={'space-between'} borderRadius={10} status='error'>
-                                <AlertIcon/>
-                                <AlertTitle>Connect Wallet</AlertTitle>
-                                <AlertDescription ml={'auto'}>
-                                    <Button
-                                        isLoading={status === 'connecting'}
-                                        onClick={connectWallet}
-                                        display={{base: "inline-flex", md: "inline-flex"}}
-                                        colorScheme="red"
-                                        gap={2}
-                                    >
-                                        Connect
-                                    </Button>
-                                </AlertDescription>
-                            </Alert>
-                        }
-
-                        {status === 'unavailable'
-                            && <Alert mb={5} borderRadius={10} status='error'>
-                                <AlertIcon/>
-                                <AlertTitle>MetaMask not detected</AlertTitle>
-                                <AlertDescription ml={'auto'}>
-                                    <Button
-                                        as={Link}
-                                        href={'https://metamask.io/download/'}
-                                        target={'_blank'}
-                                        display={{base: "inline-flex", md: "inline-flex"}}
-                                        colorScheme="red"
-                                        gap={2}
-                                    >
-                                        Install wallet
-                                    </Button>
-                                </AlertDescription>
-                            </Alert>
-                        }
-                    </Flex>
-
-                    {account && chainId === DEFAULT_CHAIN &&
-                        <Box margin="auto">
-                            {children}
-                        </Box>
-                    }
-                </SidebarWithHeader>
-            </Container>
-        </Box>
-    );
-};
-
-export default RootLayout
+export default Dashboard

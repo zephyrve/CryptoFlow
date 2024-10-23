@@ -10,7 +10,7 @@ export async function POST(req: Request) {
 
     if (owner) {
         try {
-            const addresses = await Address.find({owner});
+            const addresses = await Address.find({owner: {$regex: new RegExp(owner, 'i')}});
 
             return NextResponse.json(addresses, {status: 200});
         } catch (error: unknown) {
