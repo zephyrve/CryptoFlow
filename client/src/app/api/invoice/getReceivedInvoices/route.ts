@@ -10,7 +10,7 @@ export async function POST(req: Request) {
 
     if (recipient) {
         try {
-            const invoices = await Invoice.find({recipient});
+            const invoices = await Invoice.find({recipient: {$regex: new RegExp(recipient, 'i')}});
 
             return NextResponse.json(invoices, {status: 200});
         } catch (error: unknown) {
@@ -24,3 +24,4 @@ export async function POST(req: Request) {
 
     return NextResponse.json({error: 'data_incomplete'}, {status: 422});
 }
+

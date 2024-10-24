@@ -10,7 +10,10 @@ export async function POST(req: Request) {
 
     if (owner && walletAddress) {
         try {
-            const existingAddress = await Address.findOne({walletAddress});
+            const existingAddress = await Address.findOne({
+                walletAddress: { $regex: new RegExp(walletAddress, 'i') },
+                owner: { $regex: new RegExp(owner, 'i') }
+            });
 
             if (existingAddress) {
                 return NextResponse.json({error: "Address already exists"}, {status: 409});

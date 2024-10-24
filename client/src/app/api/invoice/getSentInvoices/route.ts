@@ -10,7 +10,7 @@ export async function POST(req: Request) {
 
     if (owner) {
         try {
-            const invoices = await Invoice.find({owner});
+            const invoices = await Invoice.find({ owner: { $regex: new RegExp(owner, 'i') } });
 
             return NextResponse.json(invoices, {status: 200});
         } catch (error: unknown) {

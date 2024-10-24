@@ -8,7 +8,7 @@ export async function POST(req: Request) {
     const body = await req.json();
     const {owner, name, description} = body;
 
-    if (owner && name) {
+    if (owner && name && description) {
         try {
             const group = new AddressGroup(body);
 

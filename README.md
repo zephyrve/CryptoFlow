@@ -21,11 +21,12 @@
 - **User Permissions**: Assign privileges for canceling or transferring payments.
 - **Reporting & Statistics**: View reports on sent and received payments and manage invoices.
 - **MongoDB Integration**: Used to store and manage user data such as addresses, address groups, and invoices, ensuring efficient backend data handling.
+- **Statistics Dashboard**: Integrated a statistics dashboard for transaction tracking.
 
-
-| ![Image 1](https://github.com/zephyrve/CryptoFlow/blob/main/client/public/images/address-book.png) | ![Image 2](https://github.com/zephyrve/CryptoFlow/blob/main/client/public/images/new-invoice.png)           |
-|--------------------------------------------------------------------------------------------------------|------------------------------------------------------------------------------------------------------------|
-| ![Image 3](https://github.com/zephyrve/CryptoFlow/blob/main/client/public/images/new-one-time-payment.png)  | ![Image 4](https://github.com/zephyrve/CryptoFlow/blob/main/client/public/images/new-recurring-payment.png) |
+| ![Image 1](https://github.com/zephyrve/CryptoFlow/blob/main/client/public/docs/address-book.png)        | ![Image 2](https://github.com/zephyrve/CryptoFlow/blob/main/client/public/docs/new-invoice.png)           |
+|---------------------------------------------------------------------------------------------------------|-----------------------------------------------------------------------------------------------------------|
+| ![Image 3](https://github.com/zephyrve/CryptoFlow/blob/main/client/public/docs/new-one-time-payment.png) | ![Image 4](https://github.com/zephyrve/CryptoFlow/blob/main/client/public/docs/new-recurring-payment.png) |
+| ![Image 5](https://github.com/zephyrve/CryptoFlow/blob/main/client/public/docs/statistics.png) | ![Image 6](https://github.com/zephyrve/CryptoFlow/blob/main/client/public/docs/balance.png)               |
 
 
 ## Installation Guide

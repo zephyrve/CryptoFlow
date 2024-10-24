@@ -1,26 +1,11 @@
 'use client'
+import React from 'react';
+import {CreateOneTimePayment} from "@/app/(privates)/payment/one-time/CreateOneTimePayment";
 
-import {Box} from "@chakra-ui/react";
-import {useEffect} from "react";
-import OneTimePaymentForm from "@/components/onetime-payment/OneTimePaymentForm";
-import Recipients from "@/components/onetime-payment/Recipients";
-import {getAddressThunk} from "@/stores/address-book/getAddressesThunk";
-import {useAppDispatch} from "@/stores/hooks";
-import {useMetaMask} from "@/utils/walletConnection/useMetamask";
-
-const OneTimePayment = () => {
-    const dispatch = useAppDispatch();
-    const {account} = useMetaMask()
-
-    useEffect(() => {
-        dispatch(getAddressThunk(account));
-    }, [account]);
-
+const Page = () => {
     return (
-        <Box>
-            <OneTimePaymentForm/>
-            <Recipients/>
-        </Box>
+        <CreateOneTimePayment/>
     );
 };
-export default OneTimePayment
+
+export default Page;

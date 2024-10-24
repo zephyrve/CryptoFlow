@@ -1,33 +1,32 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.20;
 
-import "@openzeppelin/contracts/utils/Pausable.sol";
-import "@openzeppelin/contracts/utils/ReentrancyGuard.sol";
-import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
-import "./interfaces/ICryptoFlow.sol";
-import "./interfaces/IUser.sol";
-import "./libs/Structs.sol";
+import './interfaces/ICryptoFlow.sol';
+import './interfaces/IUser.sol';
+import './libs/Structs.sol';
 
-contract CryptoFlow is ICryptoFlow, IUSer, Pausable, ReentrancyGuard {
-    uint private _requestCount;
-    address private _contractOwner;
-    mapping(uint => Structs.PaymentRequest) private _paymentRequests;
-    mapping(address => uint[]) private _senderToRequests;
-    mapping(address => uint[]) private _recipientToRequests;
+import '@openzeppelin/contracts/access/Ownable.sol';
+import '@openzeppelin/contracts/token/ERC20/IERC20.sol';
+import '@openzeppelin/contracts/utils/Pausable.sol';
+import '@openzeppelin/contracts/utils/ReentrancyGuard.sol';
+
+contract CryptoFlow is ICryptoFlow, IUser, Pausable, ReentrancyGuard, Ownable {
+    uint256 private _requestCount;
+    mapping(uint256 => Structs.PaymentRequest) private _paymentRequests;
+    mapping(address => uint256[]) private _senderToRequests;
+    mapping(address => uint256[]) private _recipientToRequests;
     mapping(address => address[]) private _usersTokens;
-    mapping(address => mapping(address => uint)) private _usersBalance;
-    mapping(address => mapping(address => uint)) private _usersLockedAmount;
+    mapping(address => mapping(address => uint256)) private _usersBalance;
+    mapping(address => mapping(address => uint256)) private _usersLockedAmount;
 
-    constructor() Pausable() ReentrancyGuard() {
-        _contractOwner = msg.sender;
-    }
+    constructor() Pausable() ReentrancyGuard() Ownable(msg.sender) {}
 
     receive() external payable {
         address addressThis = address(this);
         address sender = msg.sender;
         address[] memory userTokens = _usersTokens[sender];
         bool isFoundToken = false;
-        for (uint i = 0; i < userTokens.length; i++) {
+        for (uint256 i = 0; i < userTokens.length; i++) {
             if (userTokens[i] == addressThis) {
                 isFoundToken = true;
                 break;
@@ -42,12 +41,12 @@ contract CryptoFlow is ICryptoFlow, IUSer, Pausable, ReentrancyGuard {
         emit Receive(sender, msg.value);
     }
 
-    function deposit(address _tokenAddress, uint _amount) external payable override whenNotPaused nonReentrant {
-        require(_amount > 0, "_amount<=0");
+    function deposit(address _tokenAddress, uint256 _amount) external payable override whenNotPaused nonReentrant {
+        require(_amount > 0, '_amount<=0');
         address sender = msg.sender;
         address[] memory userTokens = _usersTokens[sender];
         bool isFoundToken = false;
-        for (uint i = 0; i < userTokens.length; i++) {
+        for (uint256 i = 0; i < userTokens.length; i++) {
             if (userTokens[i] == _tokenAddress) {
                 isFoundToken = true;
                 break;
@@ -69,9 +68,9 @@ contract CryptoFlow is ICryptoFlow, IUSer, Pausable, ReentrancyGuard {
     }
 
     function getSenderRequests() external view override returns (Structs.PaymentRequest[] memory) {
-        uint[] memory pr = _senderToRequests[msg.sender];
+        uint256[] memory pr = _senderToRequests[msg.sender];
         Structs.PaymentRequest[] memory prArr = new Structs.PaymentRequest[](pr.length);
-        for (uint i = 0; i < pr.length; i++) {
+        for (uint256 i = 0; i < pr.length; i++) {
             prArr[i] = _paymentRequests[pr[i]];
         }
 
@@ -79,9 +78,9 @@ contract CryptoFlow is ICryptoFlow, IUSer, Pausable, ReentrancyGuard {
     }
 
     function getRecipientRequests() external view override returns (Structs.PaymentRequest[] memory) {
-        uint[] memory pr = _recipientToRequests[msg.sender];
+        uint256[] memory pr = _recipientToRequests[msg.sender];
         Structs.PaymentRequest[] memory prArr = new Structs.PaymentRequest[](pr.length);
-        for (uint i = 0; i < pr.length; i++) {
+        for (uint256 i = 0; i < pr.length; i++) {
             prArr[i] = _paymentRequests[pr[i]];
         }
 
@@ -92,16 +91,16 @@ contract CryptoFlow is ICryptoFlow, IUSer, Pausable, ReentrancyGuard {
         Structs.RecurringSetting memory _settings,
         Structs.RecurringRecipient[] memory _recipients
     ) external override whenNotPaused nonReentrant {
-        require(_settings.startDate >= block.timestamp, "startDate<block.timestamp");
-        uint count = _requestCount;
+        require(_settings.startDate >= block.timestamp, 'startDate<block.timestamp');
+        uint256 count = _requestCount;
         address sender = msg.sender;
-        uint totalAmount = 0;
-        uint tokenBalance = _usersBalance[sender][_settings.tokenAddress];
-        uint lockedAmount = _usersLockedAmount[sender][_settings.tokenAddress];
-        uint payAmount = 0;
+        uint256 totalAmount = 0;
+        uint256 tokenBalance = _usersBalance[sender][_settings.tokenAddress];
+        uint256 lockedAmount = _usersLockedAmount[sender][_settings.tokenAddress];
+        uint256 payAmount = 0;
         Structs.RecurringRecipient memory recipient;
 
-        for (uint i = 0; i < _recipients.length; i++) {
+        for (uint256 i = 0; i < _recipients.length; i++) {
             recipient = _recipients[i];
             payAmount = recipient.unlockAmountPerTime * recipient.numberOfUnlocks;
 
@@ -111,11 +110,11 @@ contract CryptoFlow is ICryptoFlow, IUSer, Pausable, ReentrancyGuard {
             totalAmount += payAmount;
         }
 
-        require(tokenBalance - lockedAmount >= totalAmount, "totalAmount<balance");
+        require(tokenBalance - lockedAmount >= totalAmount, 'totalAmount<balance');
 
         Structs.PaymentRequest memory pr;
 
-        for (uint i = 0; i < _recipients.length; i++) {
+        for (uint256 i = 0; i < _recipients.length; i++) {
             recipient = _recipients[i];
             payAmount = recipient.unlockAmountPerTime * recipient.numberOfUnlocks;
             if (recipient.prepaidPercentage > 0) {
@@ -139,9 +138,9 @@ contract CryptoFlow is ICryptoFlow, IUSer, Pausable, ReentrancyGuard {
                 _settings.whoCanTransfer,
                 1
             );
+            _paymentRequests[requestId] = pr;
             _senderToRequests[sender].push(requestId);
             _recipientToRequests[recipient.recipient].push(requestId);
-            _paymentRequests[requestId] = pr;
         }
 
         _requestCount += _recipients.length;
@@ -156,26 +155,26 @@ contract CryptoFlow is ICryptoFlow, IUSer, Pausable, ReentrancyGuard {
         Structs.OneTimeRecipient[] memory _recipients
     ) external override whenNotPaused nonReentrant {
         address sender = msg.sender;
-        uint count = _requestCount;
+        uint256 count = _requestCount;
 
-        uint totalAmount = 0;
+        uint256 totalAmount = 0;
 
-        uint tokenBalance = _usersBalance[sender][_settings.tokenAddress];
-        uint lockedAmount = _usersLockedAmount[sender][_settings.tokenAddress];
+        uint256 tokenBalance = _usersBalance[sender][_settings.tokenAddress];
+        uint256 lockedAmount = _usersLockedAmount[sender][_settings.tokenAddress];
 
         Structs.OneTimeRecipient memory recipient;
 
-        for (uint i = 0; i < _recipients.length; i++) {
+        for (uint256 i = 0; i < _recipients.length; i++) {
             recipient = _recipients[i];
             totalAmount += recipient.amount;
         }
 
-        require(tokenBalance - lockedAmount >= totalAmount, "totalAmount>balance");
+        require(tokenBalance - lockedAmount >= totalAmount, 'totalAmount>balance');
 
         if (_settings.isPayNow) {
             _usersBalance[sender][_settings.tokenAddress] -= totalAmount;
 
-            for (uint i = 0; i < _recipients.length; i++) {
+            for (uint256 i = 0; i < _recipients.length; i++) {
                 recipient = _recipients[i];
                 if (_settings.isNativeToken || _settings.tokenAddress == address(this)) {
                     payable(recipient.recipient).transfer(recipient.amount);
@@ -184,14 +183,14 @@ contract CryptoFlow is ICryptoFlow, IUSer, Pausable, ReentrancyGuard {
                 }
             }
         } else {
-            require(_settings.startDate >= block.timestamp, "startDate<timestamp");
+            require(_settings.startDate >= block.timestamp, 'startDate<timestamp');
 
             Structs.PaymentRequest memory pr;
 
-            for (uint i = 0; i < _recipients.length; i++) {
+            for (uint256 i = 0; i < _recipients.length; i++) {
                 recipient = _recipients[i];
 
-                uint requestId = count + i;
+                uint256 requestId = count + i;
 
                 pr = Structs.PaymentRequest(
                     requestId,
@@ -220,22 +219,23 @@ contract CryptoFlow is ICryptoFlow, IUSer, Pausable, ReentrancyGuard {
             lockedAmount += totalAmount;
             _usersLockedAmount[sender][_settings.tokenAddress] = lockedAmount;
         }
+
         emit CreateOneTimePayment(sender);
     }
 
-    function withdrawFromPaymentRequest(uint _requestId, uint _amount) external override whenNotPaused nonReentrant {
-        require(_amount > 0, "amount<=0");
+    function withdrawFromPaymentRequest(uint256 _requestId, uint256 _amount) external override whenNotPaused nonReentrant {
+        require(_amount > 0, 'amount<=0');
         Structs.PaymentRequest memory pr = _paymentRequests[_requestId];
-        require(pr.sender != address(0), "!pr");
-        require(msg.sender == pr.recipient, "sender!=recipient");
+        require(pr.sender != address(0), '!pr');
+        require(msg.sender == pr.recipient, 'sender!=recipient');
 
-        uint unlockedAmount = _getRecipientUnlockedAmount(pr);
+        uint256 unlockedAmount = _getRecipientUnlockedAmount(pr);
 
-        uint withdrewAmount = pr.paymentAmount - pr.remainingBalance;
+        uint256 withdrewAmount = pr.paymentAmount - pr.remainingBalance;
 
-        require(unlockedAmount - withdrewAmount >= _amount, "amount>balance");
+        require(unlockedAmount - withdrewAmount >= _amount, 'amount>balance');
 
-        uint remainingBalance = pr.remainingBalance;
+        uint256 remainingBalance = pr.remainingBalance;
         remainingBalance -= _amount;
 
         if (remainingBalance == 0) {
@@ -254,49 +254,58 @@ contract CryptoFlow is ICryptoFlow, IUSer, Pausable, ReentrancyGuard {
         emit WithdrawFromPaymentRequest(msg.sender, _requestId, _amount);
     }
 
-    function cancelPaymentRequest(uint _requestId) external override whenNotPaused nonReentrant {
+    function cancelPaymentRequest(uint256 _requestId, bool sendToEmitter) external override whenNotPaused nonReentrant {
         Structs.PaymentRequest memory paymentRequest = _paymentRequests[_requestId];
-        require(paymentRequest.sender != address(0), "!requestId");
-        require(paymentRequest.status == 1, "!active");
+        require(paymentRequest.sender != address(0), '!requestId');
+        require(paymentRequest.status == 1, '!active');
+
         bool checkPermission = _checkPermission(paymentRequest, true);
 
-        require(checkPermission, "!permission");
-        uint unlockedAmount = _getRecipientUnlockedAmount(paymentRequest);
-        uint availableBalance = unlockedAmount - (paymentRequest.paymentAmount - paymentRequest.remainingBalance);
+        require(checkPermission, '!permission');
+        uint256 unlockedAmount = _getRecipientUnlockedAmount(paymentRequest);
+        uint256 availableBalance = unlockedAmount - (paymentRequest.paymentAmount - paymentRequest.remainingBalance);
 
         _paymentRequests[_requestId].status = 2;
         _paymentRequests[_requestId].remainingBalance = 0;
 
-        _usersBalance[msg.sender][paymentRequest.tokenAddress] -= availableBalance;
-        _usersLockedAmount[msg.sender][paymentRequest.tokenAddress] -= paymentRequest.remainingBalance;
+        _usersBalance[paymentRequest.sender][paymentRequest.tokenAddress] -= availableBalance;
+        _usersLockedAmount[paymentRequest.sender][paymentRequest.tokenAddress] -= paymentRequest.remainingBalance;
+
+        address recipientAddress = msg.sender == paymentRequest.sender
+            ? paymentRequest.recipient
+            : sendToEmitter ? paymentRequest.sender : paymentRequest.recipient;
 
         if (paymentRequest.isNativeToken) {
-            payable(paymentRequest.recipient).transfer(availableBalance);
+            payable(recipientAddress).transfer(availableBalance);
         } else {
-            IERC20(paymentRequest.tokenAddress).transfer(paymentRequest.recipient, availableBalance);
+            IERC20(paymentRequest.tokenAddress).transfer(recipientAddress, availableBalance);
         }
 
         emit CancelPaymentRequest(msg.sender, _requestId);
     }
 
-    function transferPaymentRequest(uint _requestId, address _to) external override whenNotPaused nonReentrant {
+    function transferPaymentRequest(
+        uint256 _requestId,
+        address _to,
+        bool sendToOldRecipient
+    ) external override whenNotPaused nonReentrant {
         Structs.PaymentRequest memory paymentRequest = _paymentRequests[_requestId];
-        require(paymentRequest.sender != address(0), "!requestId");
-        require(paymentRequest.status == 1, "!active");
-        require(paymentRequest.recipient != _to, "old=new");
+        require(paymentRequest.sender != address(0), '!requestId');
+        require(paymentRequest.status == 1, '!active');
+        require(paymentRequest.recipient != _to, 'old=new');
         bool checkPermission = _checkPermission(paymentRequest, false);
-        require(checkPermission, "!permission");
+        require(checkPermission, '!permission');
 
-        uint unlockedAmount = _getRecipientUnlockedAmount(paymentRequest);
-        uint availableBalance = unlockedAmount - (paymentRequest.paymentAmount - paymentRequest.remainingBalance);
+        uint256 unlockedAmount = _getRecipientUnlockedAmount(paymentRequest);
+        uint256 availableBalance = unlockedAmount - (paymentRequest.paymentAmount - paymentRequest.remainingBalance);
 
         _paymentRequests[_requestId].remainingBalance = paymentRequest.paymentAmount - unlockedAmount;
-        _usersBalance[msg.sender][paymentRequest.tokenAddress] -= availableBalance;
-        _usersLockedAmount[msg.sender][paymentRequest.tokenAddress] -= availableBalance;
+        _usersBalance[paymentRequest.sender][paymentRequest.tokenAddress] -= availableBalance;
+        _usersLockedAmount[paymentRequest.sender][paymentRequest.tokenAddress] -= availableBalance;
 
-        uint index = 0;
-        uint[] memory requestIds = _recipientToRequests[paymentRequest.recipient];
-        for (uint i = 0; i < requestIds.length; i++) {
+        uint256 index = 0;
+        uint256[] memory requestIds = _recipientToRequests[paymentRequest.recipient];
+        for (uint256 i = 0; i < requestIds.length; i++) {
             if (requestIds[i] == _requestId) {
                 index = i;
                 break;
@@ -311,10 +320,14 @@ contract CryptoFlow is ICryptoFlow, IUSer, Pausable, ReentrancyGuard {
 
         _paymentRequests[_requestId].recipient = _to;
 
+        address recipientAddress = msg.sender == paymentRequest.sender
+            ? paymentRequest.recipient
+            : sendToOldRecipient ? paymentRequest.recipient : _to;
+
         if (paymentRequest.isNativeToken) {
-            payable(paymentRequest.recipient).transfer(availableBalance);
+            payable(recipientAddress).transfer(availableBalance);
         } else {
-            IERC20(paymentRequest.tokenAddress).transfer(paymentRequest.recipient, availableBalance);
+            IERC20(paymentRequest.tokenAddress).transfer(recipientAddress, availableBalance);
         }
 
         emit TransferPaymentRequest(msg.sender, _requestId, _to);
@@ -325,20 +338,20 @@ contract CryptoFlow is ICryptoFlow, IUSer, Pausable, ReentrancyGuard {
         address[] memory tokens = _usersTokens[sender];
         Structs.Balance[] memory balances = new Structs.Balance[](tokens.length);
         Structs.Balance memory balance;
-        for (uint i = 0; i < tokens.length; i++) {
+        for (uint256 i = 0; i < tokens.length; i++) {
             balance = Structs.Balance(tokens[i], _usersBalance[sender][tokens[i]], _usersLockedAmount[sender][tokens[i]]);
             balances[i] = balance;
         }
         return balances;
     }
 
-    function withdrawBalance(address _tokenAddress, uint _amount) external override whenNotPaused nonReentrant {
-        require(_amount > 0, "amount<=0");
+    function withdrawBalance(address _tokenAddress, uint256 _amount) external override whenNotPaused nonReentrant {
+        require(_amount > 0, 'amount<=0');
         address sender = msg.sender;
-        uint balance = _usersBalance[sender][_tokenAddress];
-        uint lockedAmount = _usersLockedAmount[sender][_tokenAddress];
+        uint256 balance = _usersBalance[sender][_tokenAddress];
+        uint256 lockedAmount = _usersLockedAmount[sender][_tokenAddress];
 
-        require(balance - lockedAmount >= _amount, "amount>balance");
+        require(balance - lockedAmount >= _amount, 'amount>balance');
 
         _usersBalance[sender][_tokenAddress] -= _amount;
 
@@ -351,20 +364,20 @@ contract CryptoFlow is ICryptoFlow, IUSer, Pausable, ReentrancyGuard {
         emit WithdrawBalance(sender, _tokenAddress, _amount);
     }
 
-    function _getAmountWithPrepaid(uint _recurringAmount, uint8 _prepaidPercentage) private pure returns (uint) {
-        uint prepaidAmount = (_recurringAmount * _prepaidPercentage) / 10000;
+    function _getAmountWithPrepaid(uint256 _recurringAmount, uint8 _prepaidPercentage) private pure returns (uint256) {
+        uint256 prepaidAmount = (_recurringAmount * _prepaidPercentage) / 10_000;
         return (_recurringAmount + prepaidAmount);
     }
 
     function _getRecipientUnlockedAmount(Structs.PaymentRequest memory _paymentRequest) private view returns (uint256) {
-        uint unlockedAmount = 0;
+        uint256 unlockedAmount = 0;
         if (block.timestamp < _paymentRequest.startDate) {
             return unlockedAmount;
         }
 
-        uint diffTime = block.timestamp - _paymentRequest.startDate;
+        uint256 diffTime = block.timestamp - _paymentRequest.startDate;
 
-        uint numberOfUnlock = diffTime / _paymentRequest.unlockEvery;
+        uint256 numberOfUnlock = diffTime / _paymentRequest.unlockEvery;
 
         if (numberOfUnlock > _paymentRequest.numberOfUnlocks) {
             return _paymentRequest.paymentAmount;
@@ -373,9 +386,9 @@ contract CryptoFlow is ICryptoFlow, IUSer, Pausable, ReentrancyGuard {
         }
 
         if (_paymentRequest.prepaidPercentage > 0) {
-            unlockedAmount +=
-                (_paymentRequest.numberOfUnlocks * _paymentRequest.unlockAmountPerTime * _paymentRequest.prepaidPercentage) /
-                10000;
+            unlockedAmount += (
+                _paymentRequest.numberOfUnlocks * _paymentRequest.unlockAmountPerTime * _paymentRequest.prepaidPercentage
+            ) / 10_000;
         }
 
         return unlockedAmount;
@@ -402,7 +415,7 @@ contract CryptoFlow is ICryptoFlow, IUSer, Pausable, ReentrancyGuard {
         return flag;
     }
 
-    function getBlockTimestamp() external view override returns (uint) {
+    function getBlockTimestamp() external view override returns (uint256) {
         return block.timestamp;
     }
 }

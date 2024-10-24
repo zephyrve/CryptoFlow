@@ -1,23 +1,31 @@
-import {Metadata} from "next";
-import AppProviders from "@/app/appProviders";
+import type {Metadata} from "next";
+import Providers from "@/app/providers";
+import {ThemeProvider} from "@/components/share/ThemeProvider";
+import "./globals.css";
 
 export const metadata: Metadata = {
+    title: "CryptoFlow",
+    description: "Simplifying Crypto Payments for Everyone",
     icons: {
         icon: '/favicon.webp',
     },
 };
 
-type RootLayoutProps = {
-    children: React.ReactNode;
+export default function RootLayout({children}: Readonly<{ children: React.ReactNode }>) {
+    return (
+        <html lang="en">
+        <body>
+        <ThemeProvider
+            attribute="class"
+            defaultTheme="light"
+            enableSystem
+            disableTransitionOnChange
+        >
+            <Providers>
+                {children}
+            </Providers>
+        </ThemeProvider>
+        </body>
+        </html>
+    );
 }
-
-const RootLayout = ({children,}: Readonly<RootLayoutProps>) => (
-    <html lang="en">
-    <body>
-    <AppProviders>
-        {children}
-    </AppProviders>
-    </body>
-    </html>
-);
-export default RootLayout
